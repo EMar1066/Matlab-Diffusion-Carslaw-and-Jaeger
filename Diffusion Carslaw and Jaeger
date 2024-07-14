@@ -2,30 +2,24 @@
 %Fourier Series Expansion
 %Coded by Eric Martin, July 22, 2016
 
-%THE GRADIENT IS ALL THAT MATTERS HERE, SO WE CAN USE THIS CODE TO SIMULATE
-%DIFFUSION INTO A LENS AS WELL BY SETTING THE INITAL CONCENTRATION AS -1,
-%TO SCALE THE INITIAL CONDITIONS.   THIS IS ALL THE STUFF I NEED TO MODEL,
-%SO DO VERIFICATION, MODEL OUR RESULTS, WHAT A REASONABLE CO WOULD BE AND
-%THEN SCALE TO FIELD SCALE CLAY STRUCTURES.
-
-
 clear all;
 
 fn=50; %Number of series expansions x-direction
 
-l=10; %rectangle length m
-h=0.5; %rectangle height m
-Deff=1.36e-10;%6.4e-11; %Effective diffusion constant m^2/s
-%Deff=6.41131e-8; %Effective diffusion constant m^2/s -FOR Sw=0.8
-Co=-1100; %Initial Concentration ppm
+l=0.095; %rectangle length m
+h=0.02; %rectangle height m
+%Deff=6.4e-11; %Effective diffusion constant m^2/s
+Deff=7.84E-7; %Effective diffusion constant m^2/s -FOR Sw=0.8
 
-dL=0.01; %discretization length, m
+
+
+dL=0.005; %discretization length, m
 
 Xn=l/dL; %number of nodes in x direction
 Zn=h/dL; %number of nodes in z direction
-t=75;
-t=t*365;%days (75 years)
-t=t*24*60*60; %run time, s
+
+t=1;%days
+t=10; %run time, s
 
 %Define concentration matrix
 Cm=zeros(Zn,Xn);
@@ -60,14 +54,7 @@ S3x=cos(((2*n+1)*pi*x)/(2*(l)));
   Fx=Fx+S1x*S2x*S3x;
   
   
-  %actual x loop
-%S1x=((-1)^n)/(2*n+1);
-%S2x=exp((-Deff*((2*n+1)^2)*t*pi^2)/(4*(l)^2));
-%S3x=cos(((2*(n+1))*pi*x)/(2*(l)));
-
-
-
-%Populate Fourier Array
+  %Populate Fourier Array
 
 %Fx=Fx+S1x*S2x*S3x;
 if Fx<0
@@ -78,7 +65,6 @@ end
 %FOurier expansion result for n sums. top to bottom is bottom to top on the
 %x axis
 FsumX(i+1,1)=Fx;
-%FsumZ(i+1,1)=Fxtest;
 end
 
 
@@ -99,7 +85,6 @@ Fz=Fz+S1z*S2z*S3z;
 
 
 
-%FsumZ(i,1)=Fz+FsumZ(i,1);
 end
 
 %FOurier expansion result for n sums. top to bottom is left to right on y
@@ -115,30 +100,20 @@ end
        CMexport=zeros(Zn*Xn,1);
        Cmatlab=zeros(Zn*2,Xn*2);
        exportNum=0;
-       CMax=0;
 for k=0:Zn-1
     for m=0:Xn-1
         exportNum=exportNum+1;
         Xexport(exportNum,1)=m*dL;
        Zexport(exportNum, 1)=k*dL;
-        Cm(k+1,m+1)=(A^2)*FsumZ(k+1,1)*FsumX(m+1,1)*Co;
-        if Cm(k+1,m+1)>CMax
-            CMax=Cm(k+1,m+1);
+        Cm(k+1,m+1)=(A^2)*FsumZ(k+1,1)*FsumX(m+1,1);
+        
+ 
+        
+        if Cm(k+1,m+1)<0
+            Cm(k+1,m+1)=0;
         end
         
-   if Cm(k+1,m+1)<0
-       Cm(k+1,m+1)=0;
-       
-        end
-        
-        CMexport(exportNum,1)=Cm(k+1,m+1)*Co;
-        
-      
-        
-
-     
-            
-           
+        CMexport(exportNum,1)=Cm(k+1,m+1);
         
        % FILL OUT ALL QUADRANTS - looks like these are the wrong
        % orientation for my plot.  try reversing.
@@ -153,32 +128,34 @@ for k=0:Zn-1
     end 
 end
 
-mesh(Cmatlab);
-g=gradient(Cmatlab);
+%mesh(Cmatlab);
+%g=gradient(Cmatlab);
 
-contour(Cmatlab,'ShowText','on','color','black','linewidth',2,'LabelSpacing',500);
-quiver(Cmatlab);
-contour(Cm);
-surfc(Cmatlab);
+%contour(Cmatlab,'ShowText','on','color','black','linewidth',2,'LabelSpacing',500);
+%quiver(Cmatlab);
+%contour(Cm);
+%surfc(Cmatlab);
 
- function: f(x,y)=x^3-2y^2-3x over x=[-2,2], y=[-1,1]
+%# function: f(x,y)=x^3-2y^2-3x over x=[-2,2], y=[-1,1]
 [X Y] = meshgrid(1:1:2*Xn, 1:1:2*Zn);
 Z = -1*Cmatlab;
 
- gradient of f
+%# gradient of f
 [dX dY] = gradient(Z, 2, 2);
-plot the vector field and contour levels
+
+%# plot the vector field and contour levels
 figure, hold on
 
-contour(X, Y, Z, 10)
-contourf(Cmatlab,'ShowText','on')
-contour(Cmatlab,4,'color','black','linewidth',1,'LabelSpacing',5);
+%contour(X, Y, Z, 10)
+%contour(Cmatlab,4,'color','black','linewidth',1,'LabelSpacing',500);
 quiver(X, Y, dX, dY,'color','blue','linewidth',0.5, 'AutoScaleFactor', 0.5,'MaxHeadSize', 5)
 axis equal, axis([1 2*Xn 1 2*Zn])
 set(gca,'xtick',[],'ytick',[])
 axis off
-print(gcf,'-dtiff','TestFig10','-r600');
-saveas(gcf,'TESTFIG.tif',-r96);
+print(gcf,'-dtiff','Lens185x4','-r600');
+%saveas(gcf,'TESTFIG.tif',-r96);
 
 hold off
 
+%set(gca, 'Color', 'none'); % Sets axes background
+%set(gcf, 'Position', [100 100 150 150]);
